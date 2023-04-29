@@ -1,0 +1,190 @@
+---
+title: "Service Care Markdown"
+author: "Kyle Thompson"
+date: "2023-03-15"
+output: 
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r greeting, include = "FALSE"}
+# greet workspace
+print("hello world")
+```
+
+```{r include = FALSE}
+knitr::opts_chunk$set(echo=TRUE)
+```
+
+## Introduction
+
+Social work practice has advanced in the 21st century. Primarily, this is manifested by new forms of data science that can be harnessed to visualize and conceptualize relationships between clients, services that provide for them, and the general interplay of these two entities in the lives of marginalized people. With this knowledge, there is a need for newer ways of visualizing and managing these relationships to increase knowledge and capacity for social workers to do data science properly.
+
+The goal of this project is to demonstrate the capacity of social service research when answering a basic research question such as "What is are support services for marginalized populations in Washington, DC, and where are they be located?" of research when applied to Washington DC. Washington, DC is an area of interest for this project because of its position as the nations capital, and its unique position as a federal city with an international metropolis, while also situated between three states.
+
+First, all the packages needed for this project are imported.
+
+```{r load packages, echo = FALSE}
+# Load Packages, If none of these packages are in your R library, install via CRAN by using the install.packages() argument.
+
+library("leaflet")
+library("tidycensus")
+library("tidyverse")
+library("rgdal")
+library("httr")
+require("sf")
+(tigris_use_cache = FALSE)
+
+```
+
+R has a lot of functionality in retrieving basic spatial data using the tigris:: function. For starters, a simple visualization of Washington DC as a land area is mapped so that the general landscape and shape are visible.
+
+```{r spatial, results = 'hide', echo=FALSE}
+# View basic shapefile of Washington DC
+DC <- tigris::counties(state = "DC", cb = T, resolution = "500k", year = 2021)
+basic_DC <- ggplot(DC) + geom_sf() + theme_minimal()
+print(basic_DC)
+
+```
+
+This visualization is helpful, because it shows the latitude, longitude, and the overview of where this project will be functioning spatially. Now that there is a general context of what DC looks like, shape files and data for this project will loaded into the workspace.
+
+## Getting Data
+
+Many government websites have information on different county, city, and statewide spatial data. This can be downloaded and imported into R for visualization. For this project, data on social service areas in Washington, DC will be utilized. The data used for this project came from the website [Open Data DC](https://opendata.dc.gov/), a library of District data and spatial files. The TIGER shapefile used for this project came from Data.gov, a website that operates as the central home for U.S. open data. Both of these websites are useful tools for gathering, analyzing, and visualizing data in Washington DC and the United States respectively. To directly access the files directly click on the links below:
+
+[Connection to Services and Care](https://opendata.dc.gov/datasets/DCGIS::connection-to-services-helplines-and-crisis-care-1/explore?location=38.901880%2C-76.997733%2C12.33)
+
+[TIGER/Line Shapefile, 2019, state, District of Columbia, Current Block Group State-based](https://catalog.data.gov/dataset/tiger-line-shapefile-2019-state-district-of-columbia-current-block-group-state-based)
+
+![](images/connection%20to%20services%20helplines.png){width="738"}
+
+![](images/Screenshot%20(11).png)
+
+```{r, results = TRUE, echo = FALSE}
+# Importing GIS data
+shapeDC <- readOGR("DC/tl_2019_11_bg.shp")
+DC_County <- shapeDC$COUNTYFP
+
+# mapping using leaflet
+DC <- leaflet() %>%
+  addTiles() %>% # Loading OpenStreetMap 
+  addPolygons(data = shapeDC, weight = 1, fillColor = "blue")
+print(DC)
+
+```
+
+From there, the spatial area with social services are overlaid as circle markers.
+
+```{r, results = 'TRUE', echo = FALSE}
+# Importing service center data retrieved from OpenDataDC.gov
+service_centers <- "Connection_to_Services_Helplines_and_Crisis_Care.geojson"
+service_raw <- sf::read_sf(service_centers)
+
+# Recreate the map with service center locations added
+leaflet() %>%
+  addTiles() %>% # Loading OpenStreetMap 
+  addPolygons(data = shapeDC, weight = 1, fillColor = "blue") %>% 
+  addCircleMarkers(data = service_raw, weight = 1, fillOpacity = 1)
+```
+
+These markers are helpful in showing the location of social service agencies, however it does not provide greater context of the agency name. To fix this, the markers with the proper titles of will be added.
+
+```{r, echo=FALSE}
+
+# visualization with information on area
+leaflet() %>% 
+  addTiles() %>% 
+  addPolygons(data = shapeDC, weight = 1, fillColor = "blue") %>%
+  addMarkers(
+    lng = -76.99, lat = 38.831,
+    label = "East River Family Strengthening Collaborative",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -76.982, lat = 38.843,
+    label = "Far Southeast Senior Village",
+    labelOptions = (nohide = T)) %>% 
+  addMarkers(
+    lng = -77.025, lat = 38.88,
+    label = "DC Waterfront Village",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -76.995, lat = 38.88,
+    label = "Capitol Hill Village",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -76.95, lat = 38.894,
+    label = "East River Family Strengthening Collaborative- Ward 7 Aging Services",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng =-77.035, lat = 38.901,
+    label = "Department of Veterans' Affairs- Caregivers Support Line (CSL)",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -77.053, lat = 38.902,
+    label = "Foggy Bottom West End Village",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -77.067, lat = 38.913,
+    label = "Georgetown Village",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -77.048, lat = 38.913,
+    label = "Dupont Circle Village",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -77.029, lat = 38.915,
+    label = "Terrific, Inc.- Ward 4 Aging Services",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -77.011, lat = 38.929,
+    label = "Department of Veterans' Affairs- Coaching into Care",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -77.058, lat = 38.938,
+    label = "Cleveland & Woodley Park Village",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -77.082, lat = 38.948,
+    label = "Iona- Ward 3 Aging Services",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -77.009, lat = 38.963,
+    label = "Seabury Resources for Aging- Ward 6 Aging Services",
+    labelOptions = (noHide = T)) %>% 
+  addMarkers(
+    lng = -77.029, lat = 38.984,
+    label = "East Rock Creek Village",
+    labelOptions = (noHide = T))
+
+```
+
+This map is better! Out of curiosity, one of the agencies will be selected to visualize it's address and website.
+
+```{r, message = 'FALSE'}
+
+# analyzing East River Family Strengthening Collaborative
+
+# website info
+east_river <- paste(sep = "<br/>",
+                    "<b><a href = 'https://erfsc.org/'>East River Family Strengthening Collaborative</a></b>",
+                    "4301 9th Street",
+                    "SE Washington, DC 20032")
+
+# generate map visualization
+leaflet() %>% 
+  addTiles() %>% 
+  addPolygons(data = shapeDC, weight = 1, fillColor = "blue") %>%
+  addPopups(
+    lng = -76.99, lat = 38.831, east_river,
+    options = popupOptions(closeOnClick = T, keepInView = T)) 
+```
+
+![](images/East_River.png){width="747"}
+
+The visualization offers more detail to the East River Family Strengthening Collective There is also an option to click the link on the map, which would take the user to the webpage. From there, the policy advocate or social service worker should be able to interact with the website normally, retrieving any necessary information on the agency to connect individuals and provide services.
+
+## Conclusion
+
+This brief example of spatial mapping shows the capacity for R code and data science to improve the wellbeing and livelihoods of marginalized communities. It is important for social workers, policy advocates, and service workers to be competent in the allocation and service delivery of clients using modern technology and applied social science. Through this project, more social service workers should be able to find, and load shapefile data into R to visualize service areas in their respective state.
