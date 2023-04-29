@@ -1,4 +1,4 @@
 # Geospatial Analysis of Service Agencies in Washington DC
-This project is to demonstrate the capacity of social service research when answering a basic research question such as "What is are support services for marginalized populations in Washington, DC, and where are they be located?"
+Rstudio project is to demonstrate the capacity of social service research and how it can be applied when analyzing geospatial information. 
 
 Copyright © 2022 by Kyle Thompson. All Rights Reserved
